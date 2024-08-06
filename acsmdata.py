@@ -29,6 +29,9 @@ class ACSMdata():
             # Drop rows with any NaN values
             self.df = self.df.dropna()
 
+            self.df = self.df.reset_index()
+            self.df = self.df.drop(columns=['index'])
+
             # Print the indices of rows that are dropped
             print("Rows dropped because of NaN:")
             print(self.df_withnan['time_index'][rows_with_na])
@@ -51,6 +54,31 @@ class ACSMdata():
         if ylim != None:
             plt.ylim([ylim[0],ylim[1]])
 
+    def plotTotalMass(self, excludedmzs = None, ylim = None, tlim = None):
+        if tlim is not None:
+            start = pd.to_datetime(tlim[0])
+            end = pd.to_datetime(tlim[1])
+            df_slice = self.df.loc[((self.df['time_index'] > start) & (self.df['time_index'] < end))]
+        else:
+            df_slice = self.df
+
+        y = np.zeros(len(df_slice))
+        for idx, row in df_slice.iterrows():
+            for mz in self.mzs:
+                columnname = "'m/Q " + str(mz) + "'"
+                if excludedmzs is None:
+                    y[idx] = y[idx] + row[columnname]*mz
+                else:
+                    if mz not in excludedmzs:
+                        y[idx] = y[idx] + row[columnname]*mz
+
+        plt.figure()
+        plt.plot(df_slice['time_index'],y)
+        plt.xlabel('Time')
+        if ylim != None:
+            plt.ylim([ylim[0],ylim[1]])
+
+
     def plotAveSpectrum(self, mzlim = None, ylim = None, tlim = None):
         if tlim is not None:
             start = pd.to_datetime(tlim[0])
@@ -72,6 +100,8 @@ class ACSMdata():
             plt.xlim([mzlim[0],mzlim[1]])
         if ylim is not None:
             plt.ylim([ylim[0],ylim[1]])
+
+
 
         
 
